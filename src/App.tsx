@@ -7,7 +7,7 @@ import { Move } from 'chess.js';
 import { 
   Terminal, Cpu, History, Settings, Trophy, AlertTriangle, 
   Shield, Activity, Zap, Database, User, Bot, Info,
-  ChevronRight, Maximize2, Volume2, VolumeX
+  ChevronRight, Maximize2, Volume2, VolumeX, Timer
 } from 'lucide-react';
 import Background from './components/Background';
 
@@ -20,10 +20,19 @@ const App: React.FC = () => {
   const [aiExplanation, setAiExplanation] = useState<string>('SYSTEM_READY // AWAITING_INPUT');
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  
+  const [timeControl, setTimeControl] = useState<number>(300); // 5 mins
+  const [whiteTime, setWhiteTime] = useState<number>(300);
+  const [blackTime, setBlackTime] = useState<number>(300);
+  const [turn, setTurn] = useState<'w'|'b'>('w');
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  
   const boardRef = useRef<ChessBoardRef>(null);
 
   const handleMove = (move: Move) => {
     setMoves(prev => [...prev, move]);
+    setTurn(boardRef.current?.getTurn() || 'w');
+    if (!isTimerRunning && timeControl > 0) setIsTimerRunning(true);
     setAiExplanation(`MOVE_REGISTERED: ${move.san} // ANALYZING_REACTION`);
     if (!isMuted) soundService.playMove();
   };
@@ -32,7 +41,34 @@ const App: React.FC = () => {
     setGameOver(result);
     setAiExplanation(`CRITICAL_TERMINATION: ${result.toUpperCase()}`);
     if (!isMuted) soundService.playGameOver();
+    setIsTimerRunning(false);
   };
+
+  useEffect(() => {
+    if (!isTimerRunning || gameOver || timeControl === 0) return;
+
+    const interval = setInterval(() => {
+      if (turn === 'w') {
+        setWhiteTime(prev => {
+          if (prev <= 1) {
+            handleGameOver('TIMEOUT: BLACK WINS');
+            return 0;
+          }
+          return prev - 1;
+        });
+      } else {
+        setBlackTime(prev => {
+          if (prev <= 1) {
+            handleGameOver('TIMEOUT: WHITE WINS');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isTimerRunning, gameOver, turn, timeControl]);
 
   useEffect(() => {
     if (isAiMode && !gameOver && boardRef.current?.getTurn() === 'b' && !isAiThinking) {
@@ -57,6 +93,22 @@ const App: React.FC = () => {
 
   const resetGame = () => {
     window.location.reload();
+  };
+
+  const handleTimeToggle = () => {
+    if (moves.length > 0) return;
+    const options = [0, 180, 300, 600];
+    const next = options[(options.indexOf(timeControl) + 1) % options.length];
+    setTimeControl(next);
+    setWhiteTime(next);
+    setBlackTime(next);
+  };
+
+  const formatTime = (seconds: number) => {
+    if (timeControl === 0) return '∞';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -100,6 +152,20 @@ const App: React.FC = () => {
             className="p-1 sm:p-1.5 md:p-3 glass-panel text-zinc-400 hover:text-white transition-colors flex items-center justify-center"
           >
             {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          </button>
+
+          <button 
+            onClick={handleTimeToggle}
+            disabled={moves.length > 0}
+            className={`px-1.5 py-1.5 sm:px-2 md:px-4 md:py-2 glass-panel text-[7px] sm:text-[8px] md:text-[10px] font-black tracking-widest transition-all flex items-center justify-center gap-1 md:gap-2 ${moves.length > 0 ? 'text-zinc-600 border-zinc-800 cursor-not-allowed' : 'text-neon-green neon-border-green hover:bg-neon-green/10'}`}
+          >
+            <Timer size={12} className="md:w-3.5 md:h-3.5" />
+            <span className="hidden sm:inline">
+              {timeControl === 0 ? 'TIME: INF' : `TIME: ${timeControl / 60}M`}
+            </span>
+            <span className="sm:hidden">
+              {timeControl === 0 ? 'INF' : `${timeControl / 60}M`}
+            </span>
           </button>
           
           <button 
@@ -162,12 +228,34 @@ const App: React.FC = () => {
         <section className="flex flex-col items-center justify-center relative w-full">
           <div className="absolute -z-10 w-[1000px] h-[1000px] bg-neon-cyan/5 rounded-full blur-[150px] pointer-events-none" />
           
+          {/* Top Timer (Black) */}
+          <div className="w-full max-w-[800px] flex justify-between items-end mb-2 px-2">
+            <div className="flex items-center gap-2 text-neon-pink">
+              <Bot size={18} />
+              <span className="font-bold tracking-widest text-sm">ENGINE {aiDifficulty}</span>
+            </div>
+            <div className={`text-2xl md:text-4xl font-display font-black tracking-widest transition-colors ${turn === 'b' ? 'text-neon-pink drop-shadow-[0_0_8px_rgba(255,0,255,0.8)]' : 'text-zinc-600'}`}>
+              {formatTime(blackTime)}
+            </div>
+          </div>
+
           <ChessBoard 
             ref={boardRef}
             onMove={handleMove}
             onGameOver={handleGameOver}
             isAiThinking={isAiThinking}
           />
+
+          {/* Bottom Timer (White) */}
+          <div className="w-full max-w-[800px] flex justify-between items-start mt-2 px-2">
+            <div className="flex items-center gap-2 text-neon-cyan">
+              <User size={18} />
+              <span className="font-bold tracking-widest text-sm">USER_01</span>
+            </div>
+            <div className={`text-2xl md:text-4xl font-display font-black tracking-widest transition-colors ${turn === 'w' ? 'text-neon-cyan drop-shadow-[0_0_8px_rgba(0,243,255,0.8)]' : 'text-zinc-600'}`}>
+              {formatTime(whiteTime)}
+            </div>
+          </div>
         </section>
       </main>
 

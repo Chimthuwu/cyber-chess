@@ -20,6 +20,7 @@ export interface ChessBoardRef {
 const ChessBoard = forwardRef<ChessBoardRef, ChessBoardProps>(({ onMove, onGameOver, isAiThinking }, ref) => {
   const [game, setGame] = useState(new Chess());
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [promotionMove, setPromotionMove] = useState<{from: string, to: string, color: 'w'|'b'} | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const [shockwaves, setShockwaves] = useState<{ id: number; square: string; color: string }[]>([]);
 
@@ -85,7 +86,7 @@ const ChessBoard = forwardRef<ChessBoardRef, ChessBoardProps>(({ onMove, onGameO
   }));
 
   const onSquareClick = (square: Square) => {
-    if (game.isGameOver() || isAiThinking) return;
+    if (game.isGameOver() || isAiThinking || promotionMove) return;
 
     if (selectedSquare === null) {
       const piece = game.get(square);
@@ -93,13 +94,36 @@ const ChessBoard = forwardRef<ChessBoardRef, ChessBoardProps>(({ onMove, onGameO
         setSelectedSquare(square);
       }
     } else {
-      const moveSuccess = makeMove({
-        from: selectedSquare,
-        to: square,
-        promotion: 'q',
-      });
-      setSelectedSquare(null);
+      const validMoves = game.moves({ square: selectedSquare, verbose: true });
+      const moveOptions = validMoves.filter(m => m.to === square);
+
+      if (moveOptions.length > 0) {
+        if (moveOptions[0].promotion) {
+          setPromotionMove({ from: selectedSquare, to: square, color: game.turn() });
+        } else {
+          makeMove({ from: selectedSquare, to: square });
+          setSelectedSquare(null);
+        }
+      } else {
+        const piece = game.get(square);
+        if (piece && piece.color === game.turn()) {
+          setSelectedSquare(square);
+        } else {
+          setSelectedSquare(null);
+        }
+      }
     }
+  };
+
+  const handlePromotion = (pieceType: string) => {
+    if (!promotionMove) return;
+    makeMove({
+      from: promotionMove.from,
+      to: promotionMove.to,
+      promotion: pieceType
+    });
+    setPromotionMove(null);
+    setSelectedSquare(null);
   };
 
   const renderSquare = (i: number) => {
@@ -248,6 +272,26 @@ const ChessBoard = forwardRef<ChessBoardRef, ChessBoardProps>(({ onMove, onGameO
           transform: 'translateY(100px) scale(1.2) rotateX(28deg)'
         }}
       />
+
+      {/* Promotion Modal */}
+      {promotionMove && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-lg">
+          <div className="glass-panel p-4 sm:p-6 neon-border-cyan flex flex-col items-center gap-4 shadow-[0_0_30px_rgba(0,243,255,0.2)]">
+            <h3 className="text-neon-cyan font-bold tracking-widest uppercase text-xs sm:text-sm animate-pulse">Select Upgrade</h3>
+            <div className="flex gap-2 sm:gap-4">
+              {['q', 'r', 'b', 'n'].map(p => (
+                <button
+                  key={p}
+                  onClick={(e) => { e.stopPropagation(); handlePromotion(p); }}
+                  className="w-12 h-12 sm:w-20 sm:h-20 glass-panel hover:bg-white/10 transition-colors rounded-lg flex items-center justify-center border border-white/5 hover:border-neon-cyan/50"
+                >
+                  <ChessPiece type={p as any} color={promotionMove.color} className="w-8 h-8 sm:w-14 sm:h-14" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
