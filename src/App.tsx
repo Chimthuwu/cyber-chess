@@ -60,18 +60,18 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-4 font-mono selection:bg-neon-cyan selection:text-black bg-cyber-bg overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 font-mono selection:bg-neon-cyan selection:text-black bg-cyber-bg overflow-hidden w-full max-w-[100vw]">
       <Background />
       <div className="vignette" />
       <div className="scanlines" />
       
       {/* Top Command Bar */}
-      <header className="w-full max-w-[1800px] flex justify-between items-center z-50 glass-panel px-3 py-2 md:px-6 md:py-3 neon-border-cyan relative">
+      <header className="w-full max-w-[1800px] flex justify-between items-center z-50 glass-panel px-2 py-2 md:px-6 md:py-3 neon-border-cyan relative">
         <div className="hud-bracket-tl border-neon-cyan" />
         <div className="hud-bracket-tr border-neon-cyan" />
         
         {/* Title */}
-        <h1 className="text-lg md:text-3xl font-black tracking-tighter text-neon-cyan italic font-display">
+        <h1 className="text-sm sm:text-lg md:text-3xl font-black tracking-tighter text-neon-cyan italic font-display truncate mr-1 sm:mr-2">
           CYBERCHESS
         </h1>
         
@@ -94,10 +94,10 @@ const App: React.FC = () => {
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-1.5 md:gap-3">
+        <div className="flex justify-end gap-1 sm:gap-1.5 md:gap-3">
           <button 
             onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 md:p-3 glass-panel text-zinc-400 hover:text-white transition-colors flex items-center justify-center"
+            className="p-1 sm:p-1.5 md:p-3 glass-panel text-zinc-400 hover:text-white transition-colors flex items-center justify-center"
           >
             {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
           </button>
@@ -107,7 +107,7 @@ const App: React.FC = () => {
               const levels: Difficulty[] = ['ROOKIE', 'VETERAN', 'MASTER'];
               setAiDifficulty(levels[(levels.indexOf(aiDifficulty) + 1) % levels.length]);
             }}
-            className="px-2 py-1.5 md:px-4 md:py-2 glass-panel text-[8px] md:text-[10px] font-black tracking-widest text-neon-orange neon-border-orange hover:bg-neon-orange/10 transition-all flex items-center justify-center gap-1.5 md:gap-2"
+            className="px-1.5 py-1.5 sm:px-2 md:px-4 md:py-2 glass-panel text-[7px] sm:text-[8px] md:text-[10px] font-black tracking-widest text-neon-orange neon-border-orange hover:bg-neon-orange/10 transition-all flex items-center justify-center gap-1 md:gap-2"
           >
             <Cpu size={12} className="md:w-3.5 md:h-3.5" />
             <span className="hidden sm:inline">LVL: {aiDifficulty}</span>
@@ -116,7 +116,7 @@ const App: React.FC = () => {
 
           <button 
             onClick={() => setIsAiMode(!isAiMode)}
-            className={`px-2 py-1.5 md:px-4 md:py-2 glass-panel text-[8px] md:text-[10px] font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 md:gap-2 ${isAiMode ? 'text-neon-cyan neon-border-cyan bg-neon-cyan/5' : 'text-zinc-500 border-zinc-800'}`}
+            className={`px-1.5 py-1.5 sm:px-2 md:px-4 md:py-2 glass-panel text-[7px] sm:text-[8px] md:text-[10px] font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-1 md:gap-2 ${isAiMode ? 'text-neon-cyan neon-border-cyan bg-neon-cyan/5' : 'text-zinc-500 border-zinc-800'}`}
           >
             <Bot size={12} className="md:w-3.5 md:h-3.5" />
             <span className="hidden sm:inline">{isAiMode ? 'AI_CORE: ON' : 'AI_CORE: OFF'}</span>
@@ -124,7 +124,7 @@ const App: React.FC = () => {
           </button>
           <button 
             onClick={resetGame}
-            className="px-2 py-1.5 md:px-4 md:py-2 glass-panel text-[8px] md:text-[10px] font-black tracking-widest text-neon-pink neon-border-pink hover:bg-neon-pink/10 transition-all flex items-center justify-center gap-1.5 md:gap-2"
+            className="px-1.5 py-1.5 sm:px-2 md:px-4 md:py-2 glass-panel text-[7px] sm:text-[8px] md:text-[10px] font-black tracking-widest text-neon-pink neon-border-pink hover:bg-neon-pink/10 transition-all flex items-center justify-center gap-1 md:gap-2"
           >
             <Settings size={12} className="md:w-3.5 md:h-3.5" />
             <span className="hidden sm:inline">REBOOT</span>
@@ -159,7 +159,7 @@ const App: React.FC = () => {
         </aside>
 
         {/* Center: The Hologrid Board */}
-        <section className="flex flex-col items-center justify-center relative">
+        <section className="flex flex-col items-center justify-center relative w-full">
           <div className="absolute -z-10 w-[1000px] h-[1000px] bg-neon-cyan/5 rounded-full blur-[150px] pointer-events-none" />
           
           <ChessBoard 

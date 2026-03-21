@@ -215,14 +215,14 @@ const ChessBoard = forwardRef<ChessBoardRef, ChessBoardProps>(({ onMove, onGameO
 
   return (
     <div 
-      className="relative p-0 group/board"
+      className="relative p-0 group/board w-full max-w-[800px] mx-auto"
     >
       {/* Board Rails / Frame */}
       <div className="absolute inset-0 border-2 border-neon-cyan/20 rounded-lg blur-sm pointer-events-none hidden sm:block" />
       
       <div 
         ref={boardRef}
-        className="grid grid-cols-8 grid-rows-8 w-[95vw] sm:w-[min(90vw,1000px)] aspect-square glass-panel border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative"
+        className="grid grid-cols-8 grid-rows-8 w-full aspect-square glass-panel border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative"
         style={{
           boxShadow: `
             0 30px 60px -12px rgba(0,0,0,0.9),
